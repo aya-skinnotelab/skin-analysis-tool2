@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skin Note Lab | AI肌診断</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useCallback } = React;
+
+// ============================================================
+// ★ Google Gemini APIキー
+const GEMINI_API_KEY = "AQ.Ab8RN6JFTugDGeUwQBGlZAd9rmNxckkgrXnLlcCBD7CrpQVjHQ";
+// ============================================================
+
+// ★ LINE公式アカウントのURL（リッチメニューから直接開く場合はこのゲート画面は使わなくてもOK）
+const LINE_URL = "https://lin.ee/XXXXXXX";
+
+const SKIN_METRICS = [
+  { key: "spots",    label: "シミ・そばかす", color: "#C4956A" },
+  { key: "wrinkles", label: "シワ・小じわ",   color: "#A67C5B" },
+  { key: "sagging",  label: "たるみ",         color: "#8B6348" },
+  { key: "dullness", label: "くすみ",         color: "#BFA090" },
+  { key: "dryness",  label: "乾燥",           color: "#D4A574" },
+  { key: "pores",    label: "毛穴・凸凹",     color: "#C4956A" },
+];
+
+const ADVICE = {
+  spots:    { high:"紫外線ダメージが蓄積しています。ビタミンC美容液とSPF50+の日焼け止めを毎日使いましょう。", mid:"初期のシミが見られます。美白ケアを取り入れ、日焼け止めを習慣化しましょう。", low:"シミの状態は良好です。現在のUVケアを継続してください。" },
+  wrinkles: { high:"深いシワが見られます。レチノール・ペプチド配合のケアと保湿強化をお勧めします。", mid:"小じわが目立ち始めています。ハリケアと表情筋マッサージを取り入れましょう。", low:"シワはほとんど見られません。現在のアンチエイジングケアを続けましょう。" },
+  sagging:  { high:"フェイスラインのたるみが顕著です。リフトアップマッサージとコラーゲンケアをお勧めします。", mid:"軽度のたるみが見られます。引き締めケアと表情筋トレーニングが効果的です。", low:"フェイスラインはキレイです。筋肉ケアを続けましょう。" },
+  dullness: { high:"くすみが強く出ています。角質ケアと血行促進マッサージをお勧めします。", mid:"やや透明感が不足しています。洗顔見直しと美白ケアを取り入れましょう。", low:"透明感があります。現在のケアを継続してください。" },
+  dryness:  { high:"乾燥が深刻です。セラミド・ヒアルロン酸配合の集中保湿ケアが必要です。", mid:"乾燥傾向があります。保湿を重ねづけし、ミスト化粧水を取り入れましょう。", low:"水分量は良好です。保湿ルーティンを続けてください。" },
+  pores:    { high:"毛穴が目立ちます。毛穴引き締め成分と週2回のクレイパックをお勧めします。", mid:"やや毛穴が気になります。クレンジングと皮脂ケアを見直しましょう。", low:"毛穴の状態は良好です。現在のケアを続けましょう。" },
+};
+
+function getAdvice(key, score) {
+  if (score >= 70) return ADVICE[key].high;
+  if (score >= 40) return ADVICE[key].mid;
+  return ADVICE[key].low;
+}
+
+function getSeverity(score) {
+  if (score >= 70) return { label:"要ケア", color:"#C0614A", bg:"#C0614A18" };
+  if (score >= 40) return { label:"注意",   color:"#C4956A", bg:"#C4956A18" };
+  return               { label:"良好",   color:"#6B9E78", bg:"#6B9E7818" };
+}
+
+function RadarChart({ scores }) {
+  const cx = 155, cy = 155, r = 100;
+  const n = SKIN_METRICS.length;
+  const angles = SKIN_METRICS.map((_, i) => (Math.PI * 2 * i) / n - Math.PI / 2);
+  const scorePts = angles.map((a, i) => {
+    const ratio = (scores[SKIN_METRICS[i].key] || 0) / 100;
+    return { x: cx + r * ratio * Math.cos(a), y: cy + r * ratio * Math.sin(a) };
+  });
+  const poly = pts => pts.map(p => `${p.x},${p.y}`).join(" ");
+
+  return (
+    <svg viewBox="0 0 310 310" style={{ width:"100%", maxWidth:300 }}>
+      {[0.2,0.4,0.6,0.8,1].map((ratio, ri) => (
+        <polygon key={ri}
+          points={poly(angles.map(a => ({ x: cx+r*ratio*Math.cos(a), y: cy+r*ratio*Math.sin(a) })))}
+          fill="none" stroke={ri===4?"#C4956A":"#E8D8CC"}
+          strokeWidth={ri===4?1.5:1} strokeDasharray={ri<4?"4,3":"none"} />
+      ))}
+      {angles.map((a, i) => (
+        <line key={i} x1={cx} y1={cy} x2={cx+r*Math.cos(a)} y2={cy+r*Math.sin(a)} stroke="#DEC9BA" strokeWidth={1} />
+      ))}
+      <polygon points={poly(scorePts)} fill="rgba(196,149,106,0.22)" stroke="#C4956A" strokeWidth={2.5} strokeLinejoin="round" />
+      {scorePts.map((pt, i) => (
+        <circle key={i} cx={pt.x} cy={pt.y} r={4} fill="#C4956A" stroke="#fff" strokeWidth={2} />
+      ))}
+      {angles.map((a, i) => {
+        const labelR = r + 30;
+        const lx = cx + labelR * Math.cos(a);
+        const ly = cy + labelR * Math.sin(a);
+        const score = scores[SKIN_METRICS[i].key] || 0;
+        const sv = getSeverity(score);
+        return (
+          <g key={i}>
+            <text x={lx} y={ly-6} textAnchor="middle" fontSize="9.5" fill="#6B4F3A" fontWeight="600" fontFamily="'Hiragino Kaku Gothic ProN',sans-serif">{SKIN_METRICS[i].label}</text>
+            <text x={lx} y={ly+8} textAnchor="middle" fontSize="12" fill={sv.color} fontWeight="800" fontFamily="serif">{score}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+async function analyzeWithGemini(base64Image, mediaType) {
+  const prompt = `あなたは皮膚科医・美容専門家です。この顔写真を分析し、以下6項目を0〜100のスコアで評価してください。スコアは「肌トラブルの深刻度」（0=問題なし、100=非常に深刻）です。
+
+- spots: シミ・そばかす
+- wrinkles: シワ・小じわ
+- sagging: たるみ
+- dullness: くすみ・透明感の欠如
+- dryness: 乾燥・水分不足
+- pores: 毛穴・肌のデコボコ
+
+肌全体のコメントも1〜2文で（日本語）。
+
+JSON形式のみで返してください（説明・バッククォート不要）:
+{"spots":数値,"wrinkles":数値,"sagging":数値,"dullness":数値,"dryness":数値,"pores":数値,"overallComment":"テキスト"}`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: mediaType, data: base64Image } },
+            { text: prompt }
+          ]
+        }],
+        generationConfig: { temperature: 0.3 }
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `API error ${res.status}`);
+  }
+
+  const data = await res.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const clean = text.replace(/```json|```/g, "").trim();
+  return JSON.parse(clean);
+}
+
+function LineGate({ onEnter }) {
+  return (
+    <div style={{ minHeight:"100vh", background:"linear-gradient(150deg,#FDF6F0 0%,#F5E8DC 60%,#EDD5C0 100%)", fontFamily:"'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif", display:"flex", flexDirection:"column" }}>
+      <div style={{ background:"linear-gradient(135deg,#1E110A 0%,#3D2010 100%)", padding:"28px 24px 24px", textAlign:"center", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% -20%, rgba(196,149,106,0.35) 0%, transparent 65%)" }} />
+        <p style={{ margin:"0 0 2px", color:"#C4956A", fontSize:10, letterSpacing:"0.35em", textTransform:"uppercase", fontWeight:700, position:"relative" }}>Skin Note Lab</p>
+        <h1 style={{ margin:"4px 0 0", color:"#FDF6F0", fontSize:24, fontWeight:700, letterSpacing:"0.06em", position:"relative" }}>AI 肌診断</h1>
+      </div>
+      <div style={{ flex:1, padding:"0 20px 48px", maxWidth:440, margin:"0 auto", width:"100%", boxSizing:"border-box" }}>
+        <div style={{ textAlign:"center", padding:"32px 0 24px" }}>
+          <div style={{ width:96, height:96, borderRadius:"50%", background:"linear-gradient(135deg,#C4956A22,#A67C5B33)", border:"2px solid #C4956A55", display:"flex", alignItems:"center", justifyContent:"center", fontSize:44, margin:"0 auto 20px" }}>✨</div>
+          <h2 style={{ margin:"0 0 10px", color:"#2C1810", fontSize:20, fontWeight:700 }}>写真1枚で肌状態を分析</h2>
+          <p style={{ margin:0, color:"#7A5A48", fontSize:13, lineHeight:1.8 }}>AIが<strong>シミ・シワ・たるみ・くすみ</strong>など<br />6項目をレーダーチャートで可視化します</p>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:28 }}>
+          {[
+            { icon:"📸", text:"顔写真を1枚アップするだけ" },
+            { icon:"🤖", text:"AIが6項目を自動スコアリング" },
+            { icon:"📊", text:"レーダーチャートで視覚的に確認" },
+            { icon:"💡", text:"項目別のケアアドバイスつき" },
+          ].map((f,i) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"13px 16px", background:"rgba(255,255,255,0.65)", borderRadius:12, backdropFilter:"blur(6px)" }}>
+              <span style={{ fontSize:20 }}>{f.icon}</span>
+              <span style={{ color:"#2C1810", fontSize:13, fontWeight:500 }}>{f.text}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={onEnter}
+          style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:10, padding:"17px", background:"linear-gradient(135deg,#C4956A 0%,#9A6A40 100%)", color:"#FDF6F0", border:"none", borderRadius:14, fontSize:16, fontWeight:700, cursor:"pointer", boxShadow:"0 4px 20px rgba(196,149,106,0.4)", fontFamily:"inherit", marginBottom:28 }}>
+          ✨ 肌診断をはじめる
+        </button>
+        <p style={{ margin:0, color:"#C4B0A0", fontSize:11, textAlign:"center", lineHeight:1.7 }}>
+          ※ この診断はAIによる参考情報です。<br />
+          個人情報の取り扱いはプライバシーポリシーに準じます。
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SkinAnalysis() {
+  const [image, setImage] = useState(null);
+  const [imageB64, setImageB64] = useState(null);
+  const [mediaType, setMediaType] = useState("image/jpeg");
+  const [scores, setScores] = useState(null);
+  const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef();
+
+  const handleFile = useCallback((file) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setMediaType(file.type || "image/jpeg");
+    const reader = new FileReader();
+    reader.onload = e => {
+      const result = e.target.result;
+      setImage(result);
+      setImageB64(result.split(",")[1]);
+      setScores(null);
+      setError(null);
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleAnalyze = async () => {
+    if (!imageB64) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await analyzeWithGemini(imageB64, mediaType);
+      setScores(result);
+      setComment(result.overallComment || "");
+    } catch (e) {
+      setError("分析エラー: " + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reset = () => { setImage(null); setImageB64(null); setScores(null); setError(null); };
+
+  const overallScore = scores
+    ? Math.round(SKIN_METRICS.reduce((s, m) => s + (scores[m.key] || 0), 0) / SKIN_METRICS.length)
+    : null;
+
+  const skinAgeLabel = overallScore === null ? null
+    : overallScore >= 70 ? "+5〜+10歳"
+    : overallScore >= 40 ? "+2〜+5歳"
+    : "実年齢相応〜若め";
+
+  return (
+    <div style={{ minHeight:"100vh", background:"linear-gradient(150deg,#FDF6F0 0%,#F5E8DC 60%,#EDD5C0 100%)", fontFamily:"'Hiragino Kaku Gothic ProN','Hiragino Sans',sans-serif", paddingBottom:60 }}>
+      <div style={{ background:"linear-gradient(135deg,#1E110A 0%,#3D2010 100%)", padding:"28px 24px 22px", textAlign:"center", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% -20%, rgba(196,149,106,0.35) 0%, transparent 65%)" }} />
+        <p style={{ margin:"0 0 2px", color:"#C4956A", fontSize:10, letterSpacing:"0.35em", textTransform:"uppercase", fontWeight:700, position:"relative" }}>Skin Note Lab</p>
+        <h1 style={{ margin:"4px 0 0", color:"#FDF6F0", fontSize:24, fontWeight:700, letterSpacing:"0.06em", position:"relative" }}>AI 肌診断</h1>
+      </div>
+
+      <div style={{ maxWidth:480, margin:"0 auto", padding:"0 16px" }}>
+        <div style={{ marginTop:22 }}>
+          <div
+            onDragOver={e=>{e.preventDefault();setDragOver(true);}}
+            onDragLeave={()=>setDragOver(false)}
+            onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}}
+            onClick={()=>fileRef.current?.click()}
+            style={{ border:`2px dashed ${dragOver?"#C4956A":"#D4B8A8"}`, borderRadius:20, padding:image?0:"38px 20px", textAlign:"center", cursor:"pointer", background:dragOver?"rgba(196,149,106,0.08)":"rgba(255,255,255,0.55)", transition:"all 0.2s", overflow:"hidden", backdropFilter:"blur(8px)" }}>
+            {image ? (
+              <div style={{ position:"relative" }}>
+                <img src={image} alt="upload" style={{ width:"100%", maxHeight:280, objectFit:"cover", display:"block", borderRadius:18 }} />
+                <div style={{ position:"absolute", bottom:10, right:10, background:"rgba(30,17,10,0.72)", color:"#FDF6F0", fontSize:11, padding:"4px 12px", borderRadius:99, backdropFilter:"blur(4px)" }}>タップして変更</div>
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize:44, marginBottom:10, opacity:0.45 }}>📸</div>
+                <p style={{ margin:0, color:"#6B4F3A", fontWeight:600, fontSize:15 }}>顔写真をアップロード</p>
+                <p style={{ margin:"6px 0 0", color:"#A07860", fontSize:12 }}>タップして選択 / ドラッグ＆ドロップ</p>
+                <p style={{ margin:"4px 0 0", color:"#C4956A", fontSize:11 }}>JPG・PNG 対応</p>
+              </>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display:"none" }} onChange={e=>handleFile(e.target.files[0])} />
+        </div>
+
+        {image && !loading && !scores && (
+          <button onClick={handleAnalyze}
+            style={{ width:"100%", marginTop:14, padding:"16px", background:"linear-gradient(135deg,#C4956A 0%,#9A6A40 100%)", color:"#FDF6F0", border:"none", borderRadius:14, fontSize:16, fontWeight:700, letterSpacing:"0.08em", cursor:"pointer", boxShadow:"0 4px 20px rgba(196,149,106,0.4)", fontFamily:"inherit" }}>
+            ✨ 肌診断を開始する
+          </button>
+        )}
+
+        {loading && (
+          <div style={{ marginTop:24, textAlign:"center", padding:"38px 20px", background:"rgba(255,255,255,0.65)", borderRadius:20, backdropFilter:"blur(8px)" }}>
+            <div style={{ width:46, height:46, border:"3px solid #E8D8CC", borderTop:"3px solid #C4956A", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 14px" }} />
+            <p style={{ margin:0, color:"#6B4F3A", fontWeight:600 }}>AIが肌を分析中…</p>
+            <p style={{ margin:"4px 0 0", color:"#A07860", fontSize:12 }}>少々お待ちください</p>
+          </div>
+        )}
+
+        {error && (
+          <div style={{ marginTop:14, padding:"13px 16px", background:"rgba(192,97,74,0.1)", border:"1px solid rgba(192,97,74,0.3)", borderRadius:12, color:"#C0614A", fontSize:13 }}>
+            ⚠ {error}
+          </div>
+        )}
+
+        {scores && (
+          <div style={{ marginTop:22 }}>
+            <div style={{ background:"linear-gradient(135deg,#1E110A 0%,#3D2010 100%)", borderRadius:20, padding:"24px 20px", textAlign:"center", marginBottom:14, position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% 0%, rgba(196,149,106,0.2) 0%, transparent 70%)" }} />
+              <p style={{ margin:"0 0 2px", color:"#C4956A", fontSize:10, letterSpacing:"0.25em", textTransform:"uppercase", position:"relative" }}>総合診断スコア</p>
+              <div style={{ fontSize:64, fontWeight:800, color:overallScore>=70?"#E8836A":overallScore>=40?"#C4956A":"#8CC49A", lineHeight:1, margin:"8px 0 4px", fontFamily:"serif", position:"relative" }}>{overallScore}</div>
+              <p style={{ margin:"0 0 12px", color:"#C4956A88", fontSize:12, position:"relative" }}>トラブル深刻度 / 100</p>
+              <div style={{ display:"inline-block", background:"rgba(196,149,106,0.18)", border:"1px solid rgba(196,149,106,0.35)", borderRadius:99, padding:"4px 18px", color:"#C4956A", fontSize:13, fontWeight:600, position:"relative" }}>
+                見た目の肌年齢: {skinAgeLabel}
+              </div>
+              {comment && (
+                <p style={{ margin:"16px 0 0", color:"#DEC9BA", fontSize:13, lineHeight:1.7, position:"relative", padding:"12px 14px", background:"rgba(255,255,255,0.05)", borderRadius:10, borderLeft:"3px solid #C4956A", textAlign:"left" }}>
+                  {comment}
+                </p>
+              )}
+            </div>
+
+            <div style={{ background:"rgba(255,255,255,0.65)", borderRadius:20, padding:"18px 12px", marginBottom:14, backdropFilter:"blur(8px)" }}>
+              <p style={{ margin:"0 0 12px", color:"#2C1810", fontSize:14, fontWeight:700, textAlign:"center", letterSpacing:"0.05em" }}>肌状態レーダーチャート</p>
+              <div style={{ display:"flex", justifyContent:"center" }}>
+                <RadarChart scores={scores} />
+              </div>
+            </div>
+
+            <div style={{ background:"rgba(255,255,255,0.65)", borderRadius:20, padding:"18px 16px", backdropFilter:"blur(8px)" }}>
+              <p style={{ margin:"0 0 16px", color:"#2C1810", fontSize:14, fontWeight:700, letterSpacing:"0.05em" }}>項目別詳細</p>
+              <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
+                {SKIN_METRICS.map(metric => {
+                  const score = scores[metric.key] || 0;
+                  const sv = getSeverity(score);
+                  return (
+                    <div key={metric.key}>
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+                        <span style={{ color:"#2C1810", fontSize:13, fontWeight:600 }}>{metric.label}</span>
+                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                          <span style={{ fontSize:11, fontWeight:700, color:sv.color, background:sv.bg, padding:"2px 10px", borderRadius:99 }}>{sv.label}</span>
+                          <span style={{ fontSize:16, fontWeight:800, color:sv.color, fontFamily:"serif", minWidth:28, textAlign:"right" }}>{score}</span>
+                        </div>
+                      </div>
+                      <div style={{ background:"#F0E6DC", borderRadius:99, height:7, overflow:"hidden" }}>
+                        <div style={{ width:`${score}%`, height:"100%", background:`linear-gradient(90deg,${metric.color}88,${metric.color})`, borderRadius:99, transition:"width 1s cubic-bezier(.4,0,.2,1)" }} />
+                      </div>
+                      <p style={{ margin:"6px 0 0", color:"#7A5A48", fontSize:12, lineHeight:1.55 }}>{getAdvice(metric.key, score)}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <p style={{ marginTop:14, color:"#A07860", fontSize:11, textAlign:"center", lineHeight:1.7 }}>
+              ※ この診断結果はAIによる参考情報です。正確な肌診断は専門家にご相談ください。
+            </p>
+            <button onClick={reset}
+              style={{ width:"100%", marginTop:10, padding:"14px", background:"transparent", color:"#A07860", border:"1.5px solid #D4B8A8", borderRadius:14, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:"inherit" }}>
+              別の写真で診断する
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [entered, setEntered] = useState(false);
+  return entered ? <SkinAnalysis /> : <LineGate onEnter={() => setEntered(true)} />;
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
