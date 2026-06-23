@@ -367,7 +367,7 @@ function showResults(r) {
   document.getElementById('poreTypeDesc').textContent = r.poreTypeDesc || '';
 
   // ⑤肌印象
- https://github.com/aya-skinnotelab/skin-analysis-tool2/projects const ig = document.getElementById('impressionGrid');
+  const ig = document.getElementById('impressionGrid');
   ig.innerHTML = '';
   (r.impressions||[]).forEach(imp => {
     const c = imp.score==='高め' ? '#6B9E78' : imp.score==='やや低め' ? '#C4956A' : '#8A7060';
