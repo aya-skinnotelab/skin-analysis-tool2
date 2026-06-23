@@ -401,38 +401,33 @@ function reset() {
   document.getElementById('fileInput').value = '';
 }
 </sc<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-// 今のページが表示された瞬間に実行する命令です
-document.addEventListener("DOMContentLoaded", function() {
-  const canvasElement = document.querySelector('.chart-note'); // 既存のグラフエリアの近くを指定
-  if (!canvasElement) return;
+window.addEventListener('load', function() {
+  // すでにあるグラフ用の枠（radarChart）を探します
+  const ctx = document.getElementById('radarChart');
+  
+  // もしその枠が画面になければ、何もしない（エラーを防ぐため）
+  if (!ctx) return;
 
-  // グラフを描くためのCanvasを動的に作成して配置します
-  const canvas = document.createElement('canvas');
-  canvas.id = 'skinChart';
-  canvasElement.parentNode.insertBefore(canvas, canvasElement);
-
-  const ctx = canvas.getContext('2d');
+  // グラフを描く命令です
   new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: ['水分量', '油分量', 'キメ', '毛穴', 'ハリ'],
+      labels: ['水分', '油分', 'キメ', '毛穴', 'ハリ', 'ツヤ'],
       datasets: [{
-        label: 'あなたの肌スコア',
-        data: [75, 60, 80, 50, 70], // ここに分析結果の数値を反映させます
-        backgroundColor: 'rgba(210, 150, 100, 0.3)',
+        label: '肌スコア',
+        data: [80, 60, 70, 50, 90, 75],
+        backgroundColor: 'rgba(196, 149, 106, 0.3)',
         borderColor: '#C4956A',
         borderWidth: 2
       }]
     },
-    options: {
-      responsive: true,
-      scales: { r: { min: 0, max: 100 } }
+    options: { 
+      responsive: true, 
+      scales: { r: { min: 0, max: 100 } } 
     }
   });
 });
-</script>ript>
-
+</script>
 </body>
 </html>
