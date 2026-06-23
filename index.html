@@ -339,7 +339,14 @@ function showResults(r) {
 
   // ③レーダーチャート
   const sc = r.radarScores || {};
-  const vals = [sc.pores||50, sc.texture||50, sc.firmness||50, sc.glow||50, sc.brightness||50, sc.evenness||50];
+  const vals = [
+  Number(sc.pores) || 50, 
+  Number(sc.texture) || 50, 
+  Number(sc.firmness) || 50, 
+  Number(sc.glow) || 50, 
+  Number(sc.brightness) || 50, 
+  Number(sc.evenness) || 50
+];
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(document.getElementById('radarChart').getContext('2d'), {
     type: 'radar',
