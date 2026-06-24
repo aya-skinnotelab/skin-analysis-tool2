@@ -351,6 +351,11 @@ console.log("radarScores", r.radarScores);
   Number(sc.brightness) || 50, 
   Number(sc.evenness) || 50
 ];
+
+console.log("canvas", document.getElementById('radarChart'));
+console.log("Chart", typeof Chart);
+console.log("vals", vals);
+
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(document.getElementById('radarChart').getContext('2d'), {
     type: 'radar',
