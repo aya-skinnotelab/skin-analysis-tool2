@@ -339,6 +339,10 @@ function showResults(r) {
 
   // ③レーダーチャート
   const sc = r.radarScores || {};
+
+console.log("診断結果", r);
+console.log("radarScores", r.radarScores);
+
   const vals = [
   Number(sc.pores) || 50, 
   Number(sc.texture) || 50, 
@@ -401,7 +405,7 @@ function reset() {
   document.getElementById('fileInput').value = '';
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 /*
 window.addEventListener('load', function() {
