@@ -353,15 +353,23 @@ console.log("radarScores", r.radarScores);
   Number(sc.brightness) || 50, 
   Number(sc.evenness) || 50
 ];
-
 console.log("canvas", document.getElementById('radarChart'));
 console.log("Chart", typeof Chart);
 console.log("vals", vals);
 
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(document.getElementById('radarChart').getContext('2d'), {
-    type: 'radar',
-    data: {
+const canvas = document.getElementById('radarChart');
+
+canvas.width = 300;
+canvas.height = 300;
+
+console.log("canvas after set", canvas);
+
+if (chartInstance) chartInstance.destroy();
+
+chartInstance = new Chart(canvas.getContext('2d'), {
+  type: 'radar',
+  data: {
+
       labels: ['毛穴','キメ','ハリ','ツヤ','明るさ','均一感'],
       datasets: [{
         data: vals,
