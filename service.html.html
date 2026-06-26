@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skin Note Lab｜あなただけの肌悩み相談室</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --cream:  #F6F2EC;
+      --white:  #FDFBF8;
+      --brown:  #6B5141;
+      --blue:   #7A9BAD;
+      --blue-dk:#4E7A8F;
+      --gold:   #9C7E5F;
+      --text:   #3A2E28;
+      --muted:  #6B5E56;
+      --border: #DDD5CA;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--cream);
+      color: var(--text);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-weight: 300;
+      line-height: 1.85;
+      font-size: 15px;
+    }
+
+    /* ════════════════════════
+       WATERCOLOR BLOBS (背景の水彩にじみ)
+    ════════════════════════ */
+    .wc-bg {
+      position: absolute;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ════════════════════════
+       HERO
+    ════════════════════════ */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: #EDF2F6;
+      text-align: center;
+      padding: 36px 28px 60px;
+    }
+    /* 水彩にじみ – 左上 */
+    .hero-blob-tl {
+      top: -40px; left: -50px;
+      width: 260px; height: 220px;
+    }
+    /* 水彩にじみ – 右下 */
+    .hero-blob-br {
+      bottom: -30px; right: -40px;
+      width: 220px; height: 200px;
+    }
+    .hero > * { position: relative; z-index: 1; }
+
+    .hero-eyebrow {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 11.5px;
+      letter-spacing: .28em;
+      color: var(--blue);
+      margin-bottom: 18px;
+    }
+    .hero-catch {
+      font-family: 'Noto Serif JP', serif;
+      font-size: clamp(23px, 6.5vw, 34px);
+      font-weight: 300;
+      line-height: 1.6;
+      letter-spacing: .06em;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+    .hero-catch strong { font-weight: 600; display: block; color: var(--brown); }
+    .hero-sub {
+      font-size: 13.5px;
+      color: var(--muted);
+      max-width: 300px;
+      margin: 0 auto 38px;
+      line-height: 2;
+    }
+    .hero-logo {
+      display: inline-block;
+      position: relative;
+      padding: 0 20px;
+    }
+    .hero-logo::before, .hero-logo::after {
+      content: '';
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 28px; height: 1px;
+      background: var(--brown);
+      opacity: .4;
+    }
+    .hero-logo::before { left: -10px; }
+    .hero-logo::after  { right: -10px; }
+    .hero-logo-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: .14em;
+      color: var(--brown);
+    }
+
+    /* ════════════════════════
+       BOTANICAL DIVIDER
+    ════════════════════════ */
+    .botanical-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 6px 0 22px;
+    }
+    .botanical-divider::before,
+    .botanical-divider::after {
+      content: '';
+      flex: 1; max-width: 52px;
+      height: 1px;
+      background: var(--blue);
+      opacity: .35;
+    }
+
+    /* ════════════════════════
+       SECTION BASE
+    ════════════════════════ */
+    section {
+      position: relative;
+      overflow: hidden;
+      padding: 52px 24px 48px;
+    }
+    section.alt { background: var(--white); }
+    section > * { position: relative; z-index: 1; }
+
+    .section-eyebrow {
+      font-size: 10.5px;
+      letter-spacing: .28em;
+      color: var(--blue);
+      text-align: center;
+      margin-bottom: 5px;
+    }
+    .section-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: clamp(18px, 5vw, 23px);
+      font-weight: 400;
+      text-align: center;
+      line-height: 1.65;
+      letter-spacing: .06em;
+      color: var(--brown);
+      margin-bottom: 28px;
+    }
+    .section-title em {
+      font-style: normal;
+      border-bottom: 1.5px solid var(--blue);
+      padding-bottom: 1px;
+    }
+
+    /* ════════════════════════
+       PROBLEM
+    ════════════════════════ */
+    .problem-intro {
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 2;
+    }
+    .chip-row {
+      display: flex; flex-wrap: wrap;
+      gap: 10px; justify-content: center;
+      margin-bottom: 26px;
+    }
+    .chip {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 22px;
+      font-size: 14px;
+      color: var(--brown);
+      letter-spacing: .04em;
+    }
+    .problem-note {
+      text-align: center;
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 2;
+    }
+    .problem-note strong { color: var(--brown); font-weight: 500; }
+
+    /* ════════════════════════
+       WHY BOX
+    ════════════════════════ */
+    .why-box {
+      background: linear-gradient(135deg, #6E8FA3 0%, #5A7B90 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 36px 26px;
+      margin: 0 auto;
+      max-width: 480px;
+      position: relative;
+      overflow: hidden;
+    }
+    .why-box-label {
+      font-size: 11px; letter-spacing: .2em;
+      color: rgba(255,255,255,.8); margin-bottom: 14px;
+    }
+    .why-box-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 17px; font-weight: 400;
+      line-height: 1.7; margin-bottom: 16px; color: #fff;
+    }
+    .why-box p {
+      font-size: 13.5px; color: rgba(255,255,255,.92);
+      line-height: 2; margin-bottom: 10px;
+    }
+    .diff-list {
+      list-style: none; margin-top: 18px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .diff-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13.5px; color: rgba(255,255,255,.93); line-height: 1.75;
+    }
+    .diff-list li::before {
+      content: '✓'; color: #C8E0EB; font-size: 13px;
+      margin-top: 2px; flex-shrink: 0;
+    }
+
+    /* ════════════════════════
+       SERVICE CARDS
+    ════════════════════════ */
+    .service-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 22px;
+      margin-bottom: 18px;
+    }
+    .service-card-header {
+      display: flex; align-items: center;
+      gap: 13px; margin-bottom: 14px;
+    }
+    .service-icon {
+      width: 46px; height: 46px;
+      background: #D6E8F0;
+      border-radius: 50%;
+      display: flex; align-items: center;
+      justify-content: center;
+      flex-shrink: 0; font-size: 21px;
+    }
+    .service-card-title {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15.5px; font-weight: 600;
+      color: var(--brown); line-height: 1.55;
+    }
+    .service-card-badge {
+      display: inline-block;
+      background: #EEF4F8; color: var(--blue-dk);
+      font-size: 10px; letter-spacing: .08em;
+      padding: 2px 9px; border-radius: 4px;
+      margin-left: 4px; vertical-align: middle;
+    }
+    .service-card p {
+      font-size: 13.5px; color: var(--muted); line-height: 2;
+    }
+    .service-highlight {
+      margin-top: 12px;
+      background: #EEF5F9;
+      border-left: 3px solid var(--blue);
+      border-radius: 0 10px 10px 0;
+      padding: 11px 15px;
+      font-size: 13px; color: var(--brown); line-height: 1.85;
+    }
+
+    /* ════════════════════════
+       SUPPORT GRID
+    ════════════════════════ */
+    .support-grid {
+      display: flex; flex-wrap: wrap;
+      gap: 14px; justify-content: center; margin-top: 28px;
+    }
+    .support-item {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 8px;
+      width: calc(33% - 10px); min-width: 80px;
+    }
+    .support-icon-wrap {
+      width: 54px; height: 54px;
+      border: 1.5px solid var(--border);
+      border-radius: 50%; background: var(--white);
+      display: flex; align-items: center;
+      justify-content: center; font-size: 22px;
+    }
+    .support-label {
+      font-size: 11.5px; color: var(--muted);
+      text-align: center; line-height: 1.55;
+    }
+
+    /* ════════════════════════
+       PLAN CARDS
+    ════════════════════════ */
+    .plan-stack {
+      display: flex; flex-direction: column;
+      gap: 22px; max-width: 480px; margin: 0 auto;
+    }
+    .plan-card { border-radius: 18px; overflow: hidden; }
+    .plan-card-head {
+      padding: 17px 22px 15px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .plan-card-head .badge {
+      font-size: 10px; letter-spacing: .1em;
+      padding: 3px 12px; border-radius: 999px; font-weight: 500;
+    }
+    .plan-card-head h3 {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 15.5px; font-weight: 400; letter-spacing: .04em;
+    }
+    .plan-card-body { padding: 22px 22px 26px; }
+
+    .plan-first .plan-card-head { background: #B89470; color: #fff; }
+    .plan-first .plan-card-head .badge { background: rgba(255,255,255,.25); color: #fff; }
+    .plan-first .plan-card-body { background: var(--white); border: 1px solid #C4A882; border-top: none; border-radius: 0 0 18px 18px; }
+
+    .plan-intensive .plan-card-head { background: #6E8FA3; color: #fff; }
+    .plan-intensive .plan-card-head .badge { background: rgba(255,255,255,.22); color: #fff; }
+    .plan-intensive .plan-card-body { background: var(--white); border: 1px solid #7A9BAD; border-top: none; border-radius: 0 0 18px 18px; }
+
+    .plan-light .plan-card-head { background: var(--cream); color: var(--brown); border: 1px solid var(--border); border-radius: 18px 18px 0 0; }
+    .plan-light .plan-card-head .badge { background: #96B5C5; color: #fff; }
+    .plan-light .plan-card-body { background: var(--white); border: 1px solid var(--border); border-top: none; border-radius: 0 0 18px 18px; }
+
+    .plan-price {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 38px; font-weight: 600;
+      line-height: 1; letter-spacing: -.02em; margin-bottom: 2px;
+    }
+    .plan-first .plan-price { color: #9C7055; }
+    .plan-intensive .plan-price { color: #4A7A8F; }
+    .plan-light .plan-price { color: var(--brown); }
+    .plan-price-small { font-size: 14px; vertical-align: super; opacity: .7; }
+    .plan-price-unit { font-size: 14px; font-weight: 400; opacity: .7; }
+    .plan-duration { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .plan-includes {
+      list-style: none; display: flex;
+      flex-direction: column; gap: 9px; margin-bottom: 14px;
+    }
+    .plan-includes li {
+      font-size: 13.5px; color: var(--text);
+      display: flex; align-items: flex-start;
+      gap: 9px; line-height: 1.7;
+    }
+    .plan-includes li::before {
+      content: '✦'; color: var(--blue);
+      font-size: 10px; margin-top: 4px; flex-shrink: 0;
+    }
+    .plan-note {
+      font-size: 12.5px; color: var(--muted);
+      line-height: 1.9;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+    .plan-no-push {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-top: 12px; font-size: 12px;
+      color: var(--blue-dk); background: #EAF1F5;
+      border-radius: 8px; padding: 6px 13px; font-weight: 500;
+    }
+    .plan-no-push::before { content: '🌿'; font-size: 13px; }
+
+    /* ════════════════════════
+       CTA
+    ════════════════════════ */
+    .cta-section {
+      position: relative; overflow: hidden;
+      background: linear-gradient(160deg, #6E8FA3 0%, #7EA5B8 100%);
+      color: #fff; text-align: center;
+      padding: 40px 24px 48px;
+    }
+    .cta-section > * { position: relative; z-index: 1; }
+    .cta-how {
+      font-size: 14.5px; color: rgba(255,255,255,.92);
+      margin-bottom: 28px; line-height: 2.1;
+    }
+    .cta-how strong { color: #fff; font-weight: 500; }
+    .btn-line {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: #06C755; color: #fff;
+      font-size: 15px; font-weight: 500;
+      letter-spacing: .06em;
+      padding: 16px 36px; border-radius: 999px;
+      text-decoration: none;
+      box-shadow: 0 4px 18px rgba(6,199,85,.38);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-line:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6,199,85,.48); }
+    .btn-line svg { width: 22px; height: 22px; fill: #fff; }
+    .cta-note {
+      margin-top: 16px; font-size: 12px;
+      color: rgba(255,255,255,.52);
+    }
+
+    /* ════════════════════════
+       FOOTER
+    ════════════════════════ */
+    footer {
+      background: #3A2E28; color: rgba(255,255,255,.5);
+      text-align: center; padding: 28px 20px;
+      font-size: 11px; letter-spacing: .08em; line-height: 1.9;
+    }
+    footer strong {
+      color: rgba(255,255,255,.75); font-size: 13px;
+      display: block; margin-bottom: 6px;
+      letter-spacing: .18em;
+      font-family: 'Noto Serif JP', serif; font-weight: 400;
+    }
+
+    /* ════════════════════════
+       REVEAL
+    ════════════════════════ */
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity .65s ease, transform .65s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity:1; transform:none; } }
+    @media (max-width: 360px) { .support-item { width: calc(50% - 10px); } }
+  </style>
+</head>
+<body>
+
+<!-- ════ HERO ════ -->
+<header class="hero">
+
+
+
+  <p class="hero-eyebrow">— あなただけの肌悩み相談室 —</p>
+  <h1 class="hero-catch">
+    その肌悩み、<br>
+    <strong>もう一人で<br>抱え込まないで。</strong>
+  </h1>
+  <p class="hero-sub">
+    色々試したけれど、なかなか肌悩みが改善しない…<br>
+    そんなあなたに寄り添い、<br>生活習慣から一緒に見直す<br>伴走型の肌悩み相談室です。
+  </p>
+  <div class="hero-logo">
+    <p class="hero-logo-name">Skin Note Lab</p>
+  </div>
+</header>
+
+<!-- ════ PROBLEM ════ -->
+<section class="reveal">
+  <!-- 左コーナー装飾 -->
+  <svg class="wc-bg" style="top:-10px;left:-10px;width:130px;opacity:.40;" viewBox="0 0 130 160" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <ellipse cx="40" cy="60" rx="55" ry="42" fill="#96B5C5" fill-opacity="0.25"/>
+    <path d="M10 150 Q28 118 42 90 Q56 62 50 30" stroke="#7A9BAD" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M42 90 Q24 76 22 58 Q40 64 42 90Z" fill="#7A9BAD" fill-opacity="0.35"/>
+    <path d="M42 90 Q60 74 62 54 Q44 62 42 90Z" fill="#7A9BAD" fill-opacity="0.28"/>
+    <path d="M50 50 Q36 34 35 18 Q50 26 50 50Z" fill="#96B5C5" fill-opacity="0.38"/>
+    <path d="M50 50 Q64 34 65 16 Q50 26 50 50Z" fill="#96B5C5" fill-opacity="0.30"/>
+    <circle cx="22" cy="56" r="3.5" fill="#A8C8D8" fill-opacity="0.55"/>
+    <circle cx="64" cy="52" r="3"   fill="#A8C8D8" fill-opacity="0.48"/>
+  </svg>
+  <!-- 右コーナー装飾 -->
+  <svg class="wc-bg" style="top:-10px;right:-10px;width:100px;opacity:.35;transform:scaleX(-1);" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <ellipse cx="50" cy="50" rx="55" ry="42" fill="#C4A882" fill-opacity="0.18"/>
+    <path d="M10 115 Q22 90 32 68 Q42 48 38 22" stroke="#9C8070" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M32 68 Q18 56 17 42 Q32 47 32 68Z" fill="#B89878" fill-opacity="0.32"/>
+    <path d="M32 68 Q46 55 47 40 Q33 46 32 68Z" fill="#B89878" fill-opacity="0.26"/>
+    <circle cx="17" cy="40" r="3" fill="#D4BC9A" fill-opacity="0.50"/>
+  </svg>
+
+  <div class="botanical-divider">
+    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <path d="M16 30 Q16 16 16 4" stroke="#7A9BAD" stroke-width="1" stroke-linecap="round"/>
+      <path d="M16 16 Q9 11 8 4  Q16 8 16 16Z" fill="#7A9BAD" fill-opacity="0.45"/>
+      <path d="M16 16 Q23 11 24 4 Q16 8 16 16Z" fill="#7A9BAD" fill-opacity="0.38"/>
+      <path d="M16 22 Q10 17 9 11 Q16 15 16 22Z" fill="#96B5C5" fill-opacity="0.38"/>
+      <path d="M16 22 Q22 17 23 11 Q16 15 16 22Z" fill="#96B5C5" fill-opacity="0.32"/>
+    </svg>
+  </div>
+  <div class="section-eyebrow">SKIN CONCERNS</div>
+  <h2 class="section-title">こんな肌悩み、<em>ありませんか？</em></h2>
+  <p class="problem-intro">シミ・シワ・毛穴・乾燥…<br>肌のお悩みは、人それぞれです。</p>
+  <div class="chip-row">
+    <span class="chip">シミ</span>
+    <span class="chip">シワ</span>
+    <span class="chip">毛穴の開き</span>
+    <span class="chip">乾燥</span>
+    <span class="chip">ニキビ</span>
+    <span class="chip">くすみ</span>
+  </div>
+  <p class="problem-note">
+    もしかしたら、それは<br>
+    <strong>「あなたに本当に合った方法」ではない</strong><br>
+    からかもしれません。<br><br>
+    肌悩みの原因は、スキンケアだけでなく<br>
+    食事・睡眠・ストレス・生活習慣が<br>
+    深く関係していることも多いのです。
+  </p>
+</section>
+
+<!-- ════ WHY ════ -->
+<section class="alt reveal">
+  <!-- 右下の水彩 -->
+  <svg class="wc-bg" style="bottom:-20px;right:-20px;width:180px;opacity:.30;" viewBox="0 0 180 160" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="100" cy="90" rx="90" ry="70" fill="#7A9BAD" fill-opacity="0.35"/>
+    <ellipse cx="80"  cy="70" rx="65" ry="50" fill="#96B5C5" fill-opacity="0.22"/>
+  </svg>
+  <!-- 右下の葉 -->
+  <svg class="wc-bg" style="bottom:-10px;right:-10px;width:130px;opacity:.42;transform:rotate(180deg);" viewBox="0 0 130 160" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <path d="M10 150 Q28 118 42 90 Q56 62 50 30" stroke="#7A9BAD" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M42 90 Q24 76 22 58 Q40 64 42 90Z" fill="#7A9BAD" fill-opacity="0.35"/>
+    <path d="M42 90 Q60 74 62 54 Q44 62 42 90Z" fill="#7A9BAD" fill-opacity="0.28"/>
+    <path d="M50 50 Q36 34 35 18 Q50 26 50 50Z" fill="#96B5C5" fill-opacity="0.38"/>
+    <circle cx="22" cy="56" r="3.5" fill="#A8C8D8" fill-opacity="0.55"/>
+  </svg>
+
+  <div class="botanical-divider">
+    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <path d="M16 30 Q16 16 16 4" stroke="#9C8070" stroke-width="1" stroke-linecap="round"/>
+      <path d="M16 16 Q9 11 8 4  Q16 8 16 16Z" fill="#B89878" fill-opacity="0.45"/>
+      <path d="M16 16 Q23 11 24 4 Q16 8 16 16Z" fill="#B89878" fill-opacity="0.38"/>
+      <path d="M16 22 Q10 17 9 11 Q16 15 16 22Z" fill="#C4A882" fill-opacity="0.38"/>
+      <path d="M16 22 Q22 17 23 11 Q16 15 16 22Z" fill="#C4A882" fill-opacity="0.32"/>
+    </svg>
+  </div>
+  <div class="section-eyebrow">ABOUT US</div>
+  <h2 class="section-title">Skin Note Lab は<br><em>あなただけの肌悩み相談室</em></h2>
+  <div class="why-box">
+    <p class="why-box-label">▸ 私たちは化粧品を売りません</p>
+    <p class="why-box-title">エステでも、化粧品カウンターでも、<br>皮膚科でもない。</p>
+    <p>スキンケア・食事・睡眠・生活習慣まで、あなたの日常に伴走する<strong style="color:#fff">肌悩み相談室</strong>です。特定の商品を売ることが目的ではないので、本当にあなたに合った方法だけをお伝えします。</p>
+    <ul class="diff-list">
+      <li>化粧品の販売・勧誘は一切行いません</li>
+      <li>肌質・生活スタイルに合わせてオーダーメイドでサポート</li>
+      <li>目標達成まで、二人三脚で伴走します</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ════ SERVICE ════ -->
+<section class="reveal">
+  <!-- 左の水彩にじみ -->
+  <svg class="wc-bg" style="top:-10px;left:-30px;width:160px;opacity:.25;" viewBox="0 0 160 140" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="70" cy="70" rx="80" ry="60" fill="#C4A882" fill-opacity="0.35"/>
+  </svg>
+  <!-- 左の葉 -->
+  <svg class="wc-bg" style="top:20px;left:-8px;width:100px;opacity:.38;" viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <path d="M8 155 Q20 125 30 98 Q40 72 36 42" stroke="#9C8070" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M30 98 Q15 85 14 68 Q29 74 30 98Z" fill="#B89878" fill-opacity="0.38"/>
+    <path d="M30 98 Q45 84 46 66 Q31 73 30 98Z" fill="#B89878" fill-opacity="0.30"/>
+    <path d="M36 55 Q24 40 23 25 Q37 32 36 55Z" fill="#C4A882" fill-opacity="0.38"/>
+    <path d="M36 55 Q49 40 50 23 Q37 32 36 55Z" fill="#C4A882" fill-opacity="0.30"/>
+    <circle cx="14" cy="66" r="3" fill="#D4BC9A" fill-opacity="0.55"/>
+    <circle cx="48" cy="64" r="3" fill="#D4BC9A" fill-opacity="0.48"/>
+  </svg>
+
+  <div class="botanical-divider">
+    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <path d="M16 30 Q16 16 16 4" stroke="#7A9BAD" stroke-width="1" stroke-linecap="round"/>
+      <path d="M16 16 Q9 11 8 4  Q16 8 16 16Z" fill="#7A9BAD" fill-opacity="0.45"/>
+      <path d="M16 16 Q23 11 24 4 Q16 8 16 16Z" fill="#7A9BAD" fill-opacity="0.38"/>
+      <path d="M16 22 Q10 17 9 11 Q16 15 16 22Z" fill="#96B5C5" fill-opacity="0.38"/>
+      <path d="M16 22 Q22 17 23 11 Q16 15 16 22Z" fill="#96B5C5" fill-opacity="0.32"/>
+    </svg>
+  </div>
+  <div class="section-eyebrow">SERVICE</div>
+  <h2 class="section-title">あなたの「なりたい肌」を、<br><em>二人三脚で叶えます。</em></h2>
+
+  <div class="service-card">
+    <div class="service-card-header">
+      <div class="service-icon">📒</div>
+      <h3 class="service-card-title">あなただけの<br>「肌管理ノート」を作成</h3>
+    </div>
+    <p>カウンセリングをもとに、あなたの肌質・ライフスタイルに合わせたオーダーメイドの肌管理ノートを作成します。</p>
+    <div class="service-highlight">「いつ、何を、どうすればいいか」が一目でわかる、あなただけの<strong>美肌の羅針盤</strong>です。</div>
+  </div>
+
+  <div class="service-card">
+    <div class="service-card-header">
+      <div class="service-icon">💬</div>
+      <h3 class="service-card-title">LINEチャットサポート<span class="service-card-badge">継続プラン限定</span></h3>
+    </div>
+    <p>「この化粧品、私に合う？」「最近肌の調子が…」日々のちょっとした疑問や変化も、LINEでいつでも相談できます。</p>
+    <div class="service-highlight">商品を売るためではなく、<strong>あなたの肌管理をサポートするため</strong>にお答えします。</div>
+  </div>
+
+  <div class="support-grid">
+    <div class="support-item"><div class="support-icon-wrap">💆</div><p class="support-label">スキンケア<br>ルーティン最適化</p></div>
+    <div class="support-item"><div class="support-icon-wrap">🧴</div><p class="support-label">スキンケア商品<br>の選び方</p></div>
+    <div class="support-item"><div class="support-icon-wrap">🥗</div><p class="support-label">食事・栄養<br>アドバイス</p></div>
+    <div class="support-item"><div class="support-icon-wrap">🛏</div><p class="support-label">睡眠・生活習慣<br>の改善</p></div>
+    <div class="support-item"><div class="support-icon-wrap">🤍</div><p class="support-label">モチベーション<br>維持のサポート</p></div>
+  </div>
+</section>
+
+<!-- ════ PLANS ════ -->
+<section class="alt reveal">
+  <!-- 右上 水彩 -->
+  <svg class="wc-bg" style="top:-20px;right:-20px;width:170px;opacity:.28;" viewBox="0 0 170 150" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="90" cy="70" rx="88" ry="68" fill="#96B5C5" fill-opacity="0.35"/>
+    <ellipse cx="70" cy="55" rx="60" ry="45" fill="#7A9BAD" fill-opacity="0.20"/>
+  </svg>
+  <!-- 右上の葉 -->
+  <svg class="wc-bg" style="top:-8px;right:-8px;width:120px;opacity:.42;" viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <path d="M110 145 Q92 115 78 88 Q64 62 68 32" stroke="#7A9BAD" stroke-width="1.1" stroke-linecap="round"/>
+    <path d="M78 88 Q96 75 97 57 Q79 63 78 88Z" fill="#7A9BAD" fill-opacity="0.35"/>
+    <path d="M78 88 Q60 74 58 54 Q76 62 78 88Z" fill="#7A9BAD" fill-opacity="0.28"/>
+    <path d="M68 47 Q82 32 81 16 Q67 23 68 47Z" fill="#96B5C5" fill-opacity="0.38"/>
+    <circle cx="97" cy="55" r="3.5" fill="#A8C8D8" fill-opacity="0.55"/>
+    <circle cx="57" cy="52" r="3"   fill="#A8C8D8" fill-opacity="0.48"/>
+  </svg>
+
+  <div class="botanical-divider">
+    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="none">
+      <path d="M16 30 Q16 16 16 4" stroke="#9C8070" stroke-width="1" stroke-linecap="round"/>
+      <path d="M16 16 Q9 11 8 4  Q16 8 16 16Z" fill="#B89878" fill-opacity="0.45"/>
+      <path d="M16 16 Q23 11 24 4 Q16 8 16 16Z" fill="#B89878" fill-opacity="0.38"/>
+      <path d="M16 22 Q10 17 9 11 Q16 15 16 22Z" fill="#C4A882" fill-opacity="0.38"/>
+      <path d="M16 22 Q22 17 23 11 Q16 15 16 22Z" fill="#C4A882" fill-opacity="0.32"/>
+    </svg>
+  </div>
+  <div class="section-eyebrow">PLAN &amp; PRICE</div>
+  <h2 class="section-title">料金プラン</h2>
+
+  <div class="plan-stack">
+    <div class="plan-card plan-first">
+      <div class="plan-card-head"><span class="badge">初回限定</span><h3>初回カウンセリング</h3></div>
+      <div class="plan-card-body">
+        <p class="plan-price"><span class="plan-price-small">¥</span>3,000<span class="plan-price-unit">円（税込）</span></p>
+        <p class="plan-duration">50分 ／ オンライン</p>
+        <ul class="plan-includes">
+          <li>お悩み・生活スタイルの丁寧なヒアリング</li>
+          <li>あなただけの「肌管理ノート」の作成・お渡し</li>
+          <li>今すぐできるスキンケア改善のご提案</li>
+        </ul>
+        <p class="plan-note">まずはここから。カウンセリング内容を踏まえ、必要であれば継続プランのご案内をします。</p>
+      </div>
+    </div>
+
+    <div class="plan-card plan-intensive">
+      <div class="plan-card-head"><span class="badge">継続サポート</span><h3>3ヶ月集中サポートプラン</h3></div>
+      <div class="plan-card-body">
+        <p class="plan-price"><span class="plan-price-small">¥</span>45,000<span class="plan-price-unit">円（税込）</span></p>
+        <p class="plan-duration">3ヶ月間 ／ 一括</p>
+        <ul class="plan-includes">
+          <li>月2回オンラインカウンセリング（各30分）</li>
+          <li>あなただけの肌管理ノートの定期更新</li>
+          <li>LINEチャットサポート（無制限）</li>
+          <li>スキンケア商品の選び方・使い方の相談</li>
+          <li>食事・睡眠・生活習慣のアドバイス</li>
+        </ul>
+        <p class="plan-note">肌はすぐには変わりません。肌のターンオーバーや生活習慣の定着には一定の期間が必要なため、まずは3ヶ月を目安に伴走します。</p>
+        <span class="plan-no-push">無理な勧誘は一切いたしません</span>
+      </div>
+    </div>
+
+    <div class="plan-card plan-light">
+      <div class="plan-card-head"><span class="badge">修了者限定</span><h3>ライトサポートプラン</h3></div>
+      <div class="plan-card-body">
+        <p class="plan-price"><span class="plan-price-small">¥</span>7,000<span class="plan-price-unit">円／月（税込）</span></p>
+        <p class="plan-duration">月額 ／ 3ヶ月集中サポート修了者限定</p>
+        <ul class="plan-includes">
+          <li>月1回オンラインカウンセリング（30分）</li>
+          <li>LINEチャット相談（月5回まで）</li>
+          <li>スキンケアや肌状態の定期チェック</li>
+        </ul>
+        <p class="plan-note">肌改善後も安心して続けられるメンテナンスプランです。整えた肌習慣を無理なく維持できるようサポートします。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ CTA ════ -->
+<div class="cta-section reveal">
+
+  <p class="cta-how">
+    ご希望の方は、LINEに<br>
+    <strong>「相談希望」</strong>とメッセージをお送りください。<br>
+    折り返しご連絡いたします。
+  </p>
+  <a href="https://lin.ee/56j4CH8" class="btn-line">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2C6.48 2 2 5.92 2 10.72c0 3.15 1.86 5.93 4.67 7.6L6 22l4.55-2.28C11.01 19.9 11.5 20 12 20c5.52 0 10-3.92 10-8.72C22 5.92 17.52 2 12 2z"/>
+    </svg>
+    LINEで「相談希望」を送る
+  </a>
+  <p class="cta-note">公式LINEに直接メッセージをお送りください</p>
+</div>
+
+<!-- ════ FOOTER ════ -->
+<footer>
+  <strong>Skin Note Lab</strong>
+  © 2024 Skin Note Lab. All rights reserved.
+</footer>
+
+<script>
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
